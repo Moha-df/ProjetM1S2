@@ -1,0 +1,54 @@
+# =====================================================
+# Unreal Engine .gitignore
+# =====================================================
+
+# Dossiers générés par Unreal / build
+Binaries/
+Build/
+DerivedDataCache/
+Intermediate/
+Saved/
+
+# Fichiers générés par les IDE (Visual Studio / Rider / VSCode)
+.vs/
+.vscode/
+.idea/
+.vsconfig
+*.sln
+*.suo
+*.xcodeproj
+*.xcworkspace
+*.opensdf
+*.sdf
+*.VC.db
+*.VC.opendb
+
+# Fichiers compilés C++/Unreal
+*.o
+*.obj
+*.pch
+*.lib
+*.dll
+*.exp
+*.pdb
+*.exe
+*.app
+
+# Fichiers spécifiques Unreal
+*.target
+*.modules
+*.uplugin.bak
+
+# Packaged builds
+[Bb]uilds/
+[Pp]ackaged/
+
+# Logs et crashs
+*.log
+*.tlog
+Logs/
+
+# OS / divers
+.DS_Store
+Thumbs.db
+desktop.ini
