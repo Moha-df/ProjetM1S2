@@ -25,7 +25,7 @@ AProjetM1S2Character::AProjetM1S2Character()
 
 	// Create the Camera Component	
 	FirstPersonCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("First Person Camera"));
-	FirstPersonCameraComponent->SetupAttachment(FirstPersonMesh, FName("Spine1"));
+	FirstPersonCameraComponent->SetupAttachment(FirstPersonMesh, FName("Spine"));
 	FirstPersonCameraComponent->SetRelativeLocationAndRotation(FVector(-2.8f, 5.89f, 0.0f), FRotator(0.0f, 90.0f, -90.0f));
 	FirstPersonCameraComponent->bUsePawnControlRotation = true;
 	FirstPersonCameraComponent->bEnableFirstPersonFieldOfView = true;
