@@ -1,0 +1,29 @@
+UbaServer - Listening on 0.0.0.0:1345
+[1/18] Compile [x64] SharedPCH.UnrealEd.Project.ValApi.ValExpApi.Cpp20.cpp
+[2/18] Resource Default.rc2
+[3/18] Compile [x64] Module.AdvancedSessions.1.cpp
+[4/18] Compile [x64] Module.AdvancedSessions.2.cpp
+[5/18] Compile [x64] Module.AdvancedSessions.3.cpp
+[6/18] Link [x64] UnrealEditor-AdvancedSessions.lib
+   Création de la bibliothèque C:/Users/pc/Documents/Unreal Projects/ProjetM1S2/Plugins/AdvancedSessions/AdvancedSessions/Intermediate/Build/Win64/x64/UnrealEditor/Development/AdvancedSessions/UnrealEditor-AdvancedSessions.lib et de l'objet C:/Users/pc/Documents/Unreal Projects/ProjetM1S2/Plugins/AdvancedSessions/AdvancedSessions/Intermediate/Build/Win64/x64/UnrealEditor/Development/AdvancedSessions/UnrealEditor-AdvancedSessions.exp
+[7/18] Link [x64] UnrealEditor-AdvancedSessions.dll
+[8/18] Resource Default.rc2
+[9/18] Compile [x64] Module.AdvancedSteamSessions.cpp
+[10/18] Link [x64] UnrealEditor-AdvancedSteamSessions.lib
+   Création de la bibliothèque C:/Users/pc/Documents/Unreal Projects/ProjetM1S2/Plugins/AdvancedSessions/AdvancedSteamSessions/Intermediate/Build/Win64/x64/UnrealEditor/Development/AdvancedSteamSessions/UnrealEditor-AdvancedSteamSessions.lib et de l'objet C:/Users/pc/Documents/Unreal Projects/ProjetM1S2/Plugins/AdvancedSessions/AdvancedSteamSessions/Intermediate/Build/Win64/x64/UnrealEditor/Development/AdvancedSteamSessions/UnrealEditor-AdvancedSteamSessions.exp
+[11/18] Link [x64] UnrealEditor-AdvancedSteamSessions.dll
+[12/18] Resource Default.rc2
+[13/18] Compile [x64] FriendEntryWidget.cpp
+[14/18] Compile [x64] FriendListWidget.cpp
+[15/18] Compile [x64] Module.ProjetM1S2.cpp
+[16/18] Link [x64] UnrealEditor-ProjetM1S2.dll
+52>FriendListWidget.cpp.obj: Error LNK2019 : symbole externe non résolu "public: static class UTexture2D * __cdecl UAdvancedSteamFriendsLibrary::GetSteamFriendAvatar(struct FBPUniqueNetId,enum EBlueprintAsyncResultSwitch &,enum SteamAvatarSize)" (?GetSteamFriendAvatar@UAdvancedSteamFriendsLibrary@@SAPEAVUTexture2D@@UFBPUniqueNetId@@AEAW4EBlueprintAsyncResultSwitch@@W4SteamAvatarSize@@@Z) référencé dans la fonction "private: void __cdecl UFriendListWidget::PopulateFriendList(void)" (?PopulateFriendList@UFriendListWidget@@AEAAXXZ)
+52>UnrealEditor-ProjetM1S2.dll: Error LNK1120 : 1 externes non résolus
+[17/18] Link [x64] UnrealEditor-ProjetM1S2.lib
+   Création de la bibliothèque C:/Users/pc/Documents/Unreal Projects/ProjetM1S2/Intermediate/Build/Win64/x64/UnrealEditor/Development/ProjetM1S2/UnrealEditor-ProjetM1S2.lib et de l'objet C:/Users/pc/Documents/Unreal Projects/ProjetM1S2/Intermediate/Build/Win64/x64/UnrealEditor/Development/ProjetM1S2/UnrealEditor-ProjetM1S2.exp
+Trace written to file C:/Users/pc/AppData/Local/UnrealBuildTool/Log.uba with size 20.4kb
+Total time in Unreal Build Accelerator local executor: 174.38 seconds
+
+Result: Failed (OtherCompilationError)
+Total execution time: 199.55 seconds
+52>Microsoft.MakeFile.Targets(50,5): Error MSB3073 : La commande ""C:\Program Files\Epic Games\UE_5.7\Engine\Build\BatchFiles\Rebuild.bat" ProjetM1S2Editor Win64 Development -Project="C:\Users\pc\Documents\Unreal Projects\ProjetM1S2\ProjetM1S2.uproject" -WaitMutex -FromMsBuild -architecture=x64" s'est arrêtée avec le code -1.

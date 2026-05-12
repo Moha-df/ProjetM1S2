@@ -44,6 +44,13 @@ AProjetM1S2Character::AProjetM1S2Character()
 	GetCharacterMovement()->AirControl = 0.5f;
 }
 
+void AProjetM1S2Character::BeginPlay()
+{
+	Super::BeginPlay();
+
+	CheckpointTransform = GetActorTransform();
+}
+
 void AProjetM1S2Character::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {	
 	// Set up action bindings
@@ -117,4 +124,15 @@ void AProjetM1S2Character::DoJumpEnd()
 {
 	// pass StopJumping to the character
 	StopJumping();
+}
+
+void AProjetM1S2Character::SetCheckpointTransform(const FTransform& NewTransform)
+{
+	CheckpointTransform = NewTransform;
+}
+
+void AProjetM1S2Character::RespawnAtCheckpoint()
+{
+	GetCharacterMovement()->StopMovementImmediately();
+	TeleportTo(CheckpointTransform.GetLocation(), CheckpointTransform.Rotator(), false, true);
 }

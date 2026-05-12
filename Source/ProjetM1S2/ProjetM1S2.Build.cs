@@ -18,10 +18,18 @@ public class ProjetM1S2 : ModuleRules
 			"StateTreeModule",
 			"GameplayStateTreeModule",
 			"UMG",
-			"Slate"
+			"OnlineSubsystem",      // API générique online
+			"OnlineSubsystemUtils", // Helpers (SessionInterface, etc.)
+			"OnlineSubsystemSteam",  // Implémentation Steam
+			"AdvancedSessions",
+			"AdvancedSteamSessions"
 		});
-
-		PrivateDependencyModuleNames.AddRange(new string[] { });
+		
+		PrivateDependencyModuleNames.AddRange(new string[] 
+		{ 
+			"Slate", 
+			"SlateCore"             // Nécessaire dès qu'on touche à UMG côté C++
+		});
 
 		PublicIncludePaths.AddRange(new string[] {
 			"ProjetM1S2",
