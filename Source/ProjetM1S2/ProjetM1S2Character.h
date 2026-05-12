@@ -76,11 +76,16 @@ protected:
 	UFUNCTION(BlueprintCallable, Category="Input")
 	virtual void DoJumpEnd();
 
-protected:
-
+public:
 	/** Set up input action bindings */
 	virtual void SetupPlayerInputComponent(UInputComponent* InputComponent) override;
-	
+
+	// Called when the game starts or when spawned
+	virtual void BeginPlay() override;
+
+protected:
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "Gameplay")
+	FTransform CheckpointTransform;
 
 public:
 
@@ -90,5 +95,10 @@ public:
 	/** Returns first person camera component **/
 	UCameraComponent* GetFirstPersonCameraComponent() const { return FirstPersonCameraComponent; }
 
-};
+	UFUNCTION(BlueprintCallable, Category = "Gameplay")
+	void SetCheckpointTransform(const FTransform& NewTransform);
 
+	UFUNCTION(BlueprintCallable, Category = "Gameplay")
+	void RespawnAtCheckpoint();
+
+};
