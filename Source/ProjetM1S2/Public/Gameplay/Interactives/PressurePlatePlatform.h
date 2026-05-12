@@ -30,7 +30,7 @@ protected:
     UPROPERTY(VisibleAnywhere, Category = "Components")
     TObjectPtr<USceneComponent> SceneRoot;
 
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components") 
     TObjectPtr<UStaticMeshComponent> PressurePlateMesh;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
@@ -38,10 +38,10 @@ protected:
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
     TObjectPtr<UStaticMeshComponent> PlatformMesh;
-
-    /** Local-space offset applied to the platform when activated. */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Platform Behavior")
-    FVector PlatformTargetOffset = FVector(0.f, 0.f, 300.f);
+    
+    /** Visual marker for the platform's target position. Hidden at runtime. */
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+    TObjectPtr<UStaticMeshComponent> PlatformTargetMesh;
 
     /** Interpolation speed for platform movement. */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Platform Behavior",
@@ -57,6 +57,8 @@ private:
 
     /** Counter of overlapping characters. Server-only. */
     int32 OverlappingCharactersCount = 0;
+    
+    FVector PlatformActiveLocation;
 
     UFUNCTION()
     void OnRep_PlateActive();

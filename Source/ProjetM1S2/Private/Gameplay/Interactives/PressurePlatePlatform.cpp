@@ -31,6 +31,11 @@ APressurePlatePlatform::APressurePlatePlatform()
     PlatformMesh->SetupAttachment(RootComponent);
     PlatformMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
     PlatformMesh->SetCollisionResponseToAllChannels(ECR_Block);
+    
+    PlatformTargetMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("PlatformTargetMesh"));
+    PlatformTargetMesh->SetupAttachment(RootComponent);
+    PlatformTargetMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+    PlatformTargetMesh->SetHiddenInGame(true);
 }
 
 void APressurePlatePlatform::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -45,6 +50,10 @@ void APressurePlatePlatform::BeginPlay()
     Super::BeginPlay();
 
     PlatformStartLocation = PlatformMesh->GetRelativeLocation();
+    PlatformActiveLocation = PlatformTargetMesh->GetRelativeLocation();
+
+    PlatformTargetMesh->SetVisibility(false);
+    PlatformTargetMesh->SetHiddenInGame(true);
 
     if (HasAuthority())
     {
@@ -57,9 +66,7 @@ void APressurePlatePlatform::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
 
-    const FVector TargetLocation = bIsPlateActive
-        ? PlatformStartLocation + PlatformTargetOffset
-        : PlatformStartLocation;
+    const FVector TargetLocation = bIsPlateActive ? PlatformActiveLocation : PlatformStartLocation;
 
     const FVector CurrentLocation = PlatformMesh->GetRelativeLocation();
     const FVector NewLocation = FMath::VInterpTo(CurrentLocation, TargetLocation, DeltaTime, InterpSpeed);
@@ -75,15 +82,8 @@ void APressurePlatePlatform::OnPlateBeginOverlap(UPrimitiveComponent* Overlapped
                                                    UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,
                                                    bool bFromSweep, const FHitResult& SweepResult)
 {
-    if (!HasAuthority())
-    {
-        return;
-    }
-
-    if (!OtherActor || !OtherActor->IsA(ACharacter::StaticClass()))
-    {
-        return;
-    }
+    if (!HasAuthority()) { return; }
+    if (!OtherActor || !OtherActor->IsA(ACharacter::StaticClass())) { return; }
 
     ++OverlappingCharactersCount;
     if (OverlappingCharactersCount > 0 && !bIsPlateActive)
@@ -95,15 +95,8 @@ void APressurePlatePlatform::OnPlateBeginOverlap(UPrimitiveComponent* Overlapped
 void APressurePlatePlatform::OnPlateEndOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
                                                  UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
-    if (!HasAuthority())
-    {
-        return;
-    }
-
-    if (!OtherActor || !OtherActor->IsA(ACharacter::StaticClass()))
-    {
-        return;
-    }
+    if (!HasAuthority()) { return; }
+    if (!OtherActor || !OtherActor->IsA(ACharacter::StaticClass())) { return; }
 
     OverlappingCharactersCount = FMath::Max(0, OverlappingCharactersCount - 1);
     if (OverlappingCharactersCount == 0 && bIsPlateActive)
