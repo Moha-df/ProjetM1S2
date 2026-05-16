@@ -40,6 +40,15 @@ public:
     /** Pour tester rapidement depuis la console UE (touche ~). Tape "HostGame". */
     UFUNCTION(Exec)
     void HostGame();
+    
+    /**
+     * Quitte la session courante et retourne au menu principal.
+     * - Si on est host : la session est détruite (les clients seront déconnectés).
+     * - Si on est client : on se déconnecte simplement.
+     * Dans les deux cas, on revient sur la MainMenu map.
+     */
+    UFUNCTION(BlueprintCallable, Category = "Sessions")
+    void LeaveSessionAndReturnToMainMenu();
 
 protected:
     /**
@@ -49,6 +58,10 @@ protected:
      */
     UPROPERTY(EditDefaultsOnly, Category = "Sessions")
     FString LobbyMapName = TEXT("/Game/Maps/Lobby");
+    
+    /** Nom de la map de menu principal. */
+    UPROPERTY(EditDefaultsOnly, Category = "Sessions")
+    FString MainMenuMapName = TEXT("/Game/Maps/L_MainMenu");
 
 private:
     // === Callbacks délégués OSS ===
@@ -57,9 +70,14 @@ private:
                                      FUniqueNetIdPtr UserId, 
                                      const FOnlineSessionSearchResult& InviteResult);
     void OnJoinSessionComplete(FName SessionName, EOnJoinSessionCompleteResult::Type Result);
+    
+    /** Callback déclenché quand la destruction de session est terminée. */
+    void OnDestroySessionComplete(FName SessionName, bool bWasSuccessful);
 
     // === Handles pour pouvoir unbind proprement ===
     FDelegateHandle CreateSessionCompleteHandle;
     FDelegateHandle InviteAcceptedHandle;
     FDelegateHandle JoinSessionCompleteHandle;
+    /** Handle pour le délégué de destruction de session. */
+    FDelegateHandle DestroySessionCompleteHandle;
 };

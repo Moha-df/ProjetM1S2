@@ -40,6 +40,10 @@ void UProjetM1S2GameInstance::Init()
     JoinSessionCompleteHandle = Sessions->AddOnJoinSessionCompleteDelegate_Handle(
         FOnJoinSessionCompleteDelegate::CreateUObject(
             this, &UProjetM1S2GameInstance::OnJoinSessionComplete));
+    
+    DestroySessionCompleteHandle = Sessions->AddOnDestroySessionCompleteDelegate_Handle(
+    FOnDestroySessionCompleteDelegate::CreateUObject(
+        this, &UProjetM1S2GameInstance::OnDestroySessionComplete));
 
     UE_LOG(LogTemp, Log, TEXT("[GameInstance] Session delegates registered."));
 }
@@ -56,6 +60,7 @@ void UProjetM1S2GameInstance::Shutdown()
             Sessions->ClearOnCreateSessionCompleteDelegate_Handle(CreateSessionCompleteHandle);
             Sessions->ClearOnSessionUserInviteAcceptedDelegate_Handle(InviteAcceptedHandle);
             Sessions->ClearOnJoinSessionCompleteDelegate_Handle(JoinSessionCompleteHandle);
+            Sessions->ClearOnDestroySessionCompleteDelegate_Handle(DestroySessionCompleteHandle);
         }
     }
 
@@ -64,7 +69,7 @@ void UProjetM1S2GameInstance::Shutdown()
 
 void UProjetM1S2GameInstance::HostGame()
 {
-    // Pour tester rapidement depuis la console : tape "HostGame" (touche ~).
+    // Pour tester rapidement depuis la console : "HostGame" (touche ~).
     HostSession();
 }
 
@@ -135,6 +140,55 @@ void UProjetM1S2GameInstance::DestroyCurrentSession()
         Sessions->DestroySession(NAME_GameSession);
         UE_LOG(LogTemp, Log, TEXT("[GameInstance] Session destroyed."));
     }
+}
+
+void UProjetM1S2GameInstance::LeaveSessionAndReturnToMainMenu()
+{
+    IOnlineSubsystem* OnlineSub = Online::GetSubsystem(GetWorld());
+    if (!OnlineSub)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("[GameInstance] LeaveSession: no OSS."));
+        // Pas de Steam dispo : on retourne quand même au menu directement.
+        UGameplayStatics::OpenLevel(GetWorld(), FName(*MainMenuMapName));
+        return;
+    }
+
+    IOnlineSessionPtr Sessions = OnlineSub->GetSessionInterface();
+    if (!Sessions.IsValid())
+    {
+        UE_LOG(LogTemp, Warning, TEXT("[GameInstance] LeaveSession: invalid session interface."));
+        UGameplayStatics::OpenLevel(GetWorld(), FName(*MainMenuMapName));
+        return;
+    }
+
+    // Vérifier qu'on a bien une session active.
+    FNamedOnlineSession* CurrentSession = Sessions->GetNamedSession(NAME_GameSession);
+    if (!CurrentSession)
+    {
+        UE_LOG(LogTemp, Log, TEXT("[GameInstance] LeaveSession: no active session, returning to menu directly."));
+        UGameplayStatics::OpenLevel(GetWorld(), FName(*MainMenuMapName));
+        return;
+    }
+
+    UE_LOG(LogTemp, Log, TEXT("[GameInstance] Destroying session before returning to menu..."));
+
+    // DestroySession est async. Le travel vers le menu se fait dans OnDestroySessionComplete.
+    Sessions->DestroySession(NAME_GameSession);
+}
+
+void UProjetM1S2GameInstance::OnDestroySessionComplete(FName SessionName, bool bWasSuccessful)
+{
+    if (bWasSuccessful)
+    {
+        UE_LOG(LogTemp, Log, TEXT("[GameInstance] Session destroyed successfully. Returning to main menu."));
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning, TEXT("[GameInstance] DestroySession failed, but returning to main menu anyway."));
+    }
+
+    // Dans les deux cas, on retourne au menu — on ne veut pas bloquer le joueur si Steam galère.
+    UGameplayStatics::OpenLevel(GetWorld(), FName(*MainMenuMapName));
 }
 
 void UProjetM1S2GameInstance::OnCreateSessionComplete(FName SessionName, bool bWasSuccessful)
