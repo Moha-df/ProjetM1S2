@@ -4,6 +4,8 @@
 #include "Gameplay/Obstacle/MovingObstacle.h"
 #include "Net/UnrealNetwork.h"
 #include "GameFramework/GameStateBase.h"
+#include "Materials/MaterialInstanceDynamic.h"
+#include "Materials/MaterialInterface.h"
 
 // Sets default values
 AMovingObstacle::AMovingObstacle()
@@ -56,10 +58,60 @@ void AMovingObstacle::OnRep_ServerStartTime()
 }
 
 // Called when the game starts or when spawned
+void AMovingObstacle::SetupDynamicMaterials()
+{
+	if (!Mesh || DynamicMaterials.Num() > 0)
+	{
+		return;
+	}
+
+	const int32 NumMaterials = Mesh->GetNumMaterials();
+	DynamicMaterials.Reserve(NumMaterials);
+	for (int32 i = 0; i < NumMaterials; ++i)
+	{
+		if (UMaterialInterface* BaseMat = Mesh->GetMaterial(i))
+		{
+			UMaterialInstanceDynamic* MID = Mesh->CreateAndSetMaterialInstanceDynamicFromMaterial(i, BaseMat);
+			if (MID)
+			{
+				DynamicMaterials.Add(MID);
+			}
+		}
+	}
+}
+
+void AMovingObstacle::SetOpacity(float Value)
+{
+	for (UMaterialInstanceDynamic* MID : DynamicMaterials)
+	{
+		if (MID)
+		{
+			MID->SetScalarParameterValue(OpacityParameterName, Value);
+		}
+	}
+}
+
+void AMovingObstacle::FinishFade()
+{
+	bFadeFinished = true;
+	SetOpacity(1.f);
+	if (Mesh)
+	{
+		Mesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	}
+}
+
 void AMovingObstacle::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
+	SetupDynamicMaterials();
+	SetOpacity(0.f);
+	if (Mesh)
+	{
+		Mesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	}
+
 	if (HasAuthority())
 	{
 		ReplicatedStartLocation = GetActorLocation();
@@ -95,10 +147,6 @@ void AMovingObstacle::Tick(float DeltaTime)
 	}
 	
 	FColor DebugColor = HasAuthority() ? FColor::Red : FColor::Blue;
-	GEngine->AddOnScreenDebugMessage(-1, 0.f, DebugColor,
-		FString::Printf(TEXT("[%s] bhasReceivedInitialData = true"),
-			HasAuthority() ? TEXT("SRV") : TEXT("CLI"))
-	);
 	
 	float CurrentTime = 0.f;
 	
@@ -116,10 +164,38 @@ void AMovingObstacle::Tick(float DeltaTime)
 	
 	FVector NewLocation = ReplicatedStartLocation + (ReplicatedDirection * Speed * ElapsedTime);
 	SetActorLocation(NewLocation, true);
-	
+
+	const float Distance = FVector::Dist(ReplicatedStartLocation, NewLocation);
+	const float FadeOutStartDistance = MaxDistance - FadeOutDistance;
+
+	if (FadeOutDistance > 0.f && Distance >= FadeOutStartDistance)
+	{
+		const float FadeOutProgress = FMath::Clamp((Distance - FadeOutStartDistance) / FadeOutDistance, 0.f, 1.f);
+		SetOpacity(1.f - FadeOutProgress);
+
+		if (!bFadeOutCollisionDisabled && FadeOutProgress >= 0.5f)
+		{
+			bFadeOutCollisionDisabled = true;
+			if (Mesh)
+			{
+				Mesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+			}
+		}
+	}
+	else if (!bFadeFinished)
+	{
+		if (SpawnFadeDuration <= 0.f || ElapsedTime >= SpawnFadeDuration)
+		{
+			FinishFade();
+		}
+		else
+		{
+			SetOpacity(ElapsedTime / SpawnFadeDuration);
+		}
+	}
+
 	if (HasAuthority())
 	{
-		float Distance = FVector::Dist(ReplicatedStartLocation, NewLocation);
 		if (Distance >= MaxDistance)
 		{
 			Destroy();

@@ -47,4 +47,24 @@ private:
 	
 	UPROPERTY(EditAnywhere, Category = "Movement")
 	float MaxDistance = 10000.f;
+
+	UPROPERTY(EditAnywhere, Category = "Spawn")
+	float SpawnFadeDuration = 2.f;
+
+	UPROPERTY(EditAnywhere, Category = "Spawn")
+	FName OpacityParameterName = TEXT("Opacity");
+
+	UPROPERTY(EditAnywhere, Category = "Despawn")
+	float FadeOutDistance = 500.f;
+
+	bool bFadeOutCollisionDisabled = false;
+
+	UPROPERTY()
+	TArray<UMaterialInstanceDynamic*> DynamicMaterials;
+
+	bool bFadeFinished = false;
+
+	void SetupDynamicMaterials();
+	void SetOpacity(float Value);
+	void FinishFade();
 };

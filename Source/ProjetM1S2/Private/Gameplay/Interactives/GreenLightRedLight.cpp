@@ -6,6 +6,9 @@
 #include "Components/BoxComponent.h"
 #include "Components/PointLightComponent.h"
 #include "Components/SceneComponent.h"
+#include "Kismet/GameplayStatics.h"
+#include "Net/UnrealNetwork.h"
+#include "Sound/SoundBase.h"
 #include "ProjetM1S2Character.h"
 
 // Sets default values
@@ -13,6 +16,9 @@ AGreenLightRedLight::AGreenLightRedLight()
 {
 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
+
+	bReplicates = true;
+
 
 	SceneRoot = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
 	RootComponent = SceneRoot;
@@ -28,25 +34,38 @@ AGreenLightRedLight::AGreenLightRedLight()
 	StateLight->SetLightColor(GreenLightColor);
 }
 
+void AGreenLightRedLight::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(AGreenLightRedLight, bIsGreenLight);
+}
+
 void AGreenLightRedLight::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if (RoomTrigger)
+	if (HasAuthority() && RoomTrigger)
 	{
 		RoomTrigger->OnComponentBeginOverlap.AddDynamic(this, &AGreenLightRedLight::HandleOverlapBegin);
 		RoomTrigger->OnComponentEndOverlap.AddDynamic(this, &AGreenLightRedLight::HandleOverlapEnd);
 	}
 
-	SetLightState(true);
-	GetWorldTimerManager().SetTimer(LightTimerHandle, this, &AGreenLightRedLight::SwitchLightState, GreenDuration, false);
+	if (HasAuthority())
+	{
+		SetLightState(true);
+		GetWorldTimerManager().SetTimer(LightTimerHandle, this, &AGreenLightRedLight::SwitchLightState, GreenDuration, false);
+	}
+	else
+	{
+		ApplyLightColor();
+	}
 }
 
 void AGreenLightRedLight::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (bIsGreenLight)
+	if (!HasAuthority() || bIsGreenLight)
 	{
 		return;
 	}
@@ -71,7 +90,9 @@ void AGreenLightRedLight::Tick(float DeltaTime)
 		const float DistanceSq = FVector::DistSquared(*StartLocation, CurrentLocation);
 		if (DistanceSq > MovementTolerance * MovementTolerance)
 		{
+			const FVector SoundLocation = Character->GetActorLocation();
 			Character->RespawnAtCheckpoint();
+			Multicast_PlayTeleportSound(SoundLocation);
 			RedLightStartLocations.FindOrAdd(*It) = Character->GetActorLocation();
 		}
 	}
@@ -79,11 +100,18 @@ void AGreenLightRedLight::Tick(float DeltaTime)
 
 void AGreenLightRedLight::SetLightState(bool bGreen)
 {
+	const bool bPrevious = bIsGreenLight;
 	bIsGreenLight = bGreen;
 
-	if (StateLight)
+	ApplyLightColor();
+
+	if (bPrevious != bIsGreenLight)
 	{
-		StateLight->SetLightColor(bIsGreenLight ? GreenLightColor : RedLightColor);
+		USoundBase* Sound = bIsGreenLight ? RedToGreenSound : GreenToRedSound;
+		if (Sound)
+		{
+			UGameplayStatics::PlaySoundAtLocation(this, Sound, GetActorLocation());
+		}
 	}
 
 	if (!bIsGreenLight)
@@ -93,6 +121,33 @@ void AGreenLightRedLight::SetLightState(bool bGreen)
 	else
 	{
 		RedLightStartLocations.Empty();
+	}
+}
+
+void AGreenLightRedLight::ApplyLightColor()
+{
+	if (StateLight)
+	{
+		StateLight->SetLightColor(bIsGreenLight ? GreenLightColor : RedLightColor);
+	}
+}
+
+void AGreenLightRedLight::OnRep_IsGreenLight()
+{
+	ApplyLightColor();
+
+	USoundBase* Sound = bIsGreenLight ? RedToGreenSound : GreenToRedSound;
+	if (Sound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(this, Sound, GetActorLocation());
+	}
+}
+
+void AGreenLightRedLight::Multicast_PlayTeleportSound_Implementation(FVector Location)
+{
+	if (TeleportSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(this, TeleportSound, Location);
 	}
 }
 
@@ -119,6 +174,11 @@ void AGreenLightRedLight::CacheRedLightStartLocations()
 void AGreenLightRedLight::HandleOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
+	if (!HasAuthority())
+	{
+		return;
+	}
+
 	AProjetM1S2Character* Character = Cast<AProjetM1S2Character>(OtherActor);
 	if (!Character)
 	{
@@ -135,6 +195,11 @@ void AGreenLightRedLight::HandleOverlapBegin(UPrimitiveComponent* OverlappedComp
 void AGreenLightRedLight::HandleOverlapEnd(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
+	if (!HasAuthority())
+	{
+		return;
+	}
+
 	AProjetM1S2Character* Character = Cast<AProjetM1S2Character>(OtherActor);
 	if (!Character)
 	{

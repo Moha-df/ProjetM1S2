@@ -12,6 +12,7 @@ class USceneComponent;
 class UPrimitiveComponent;
 class UBoxComponent;
 class UPointLightComponent;
+class USoundBase;
 class AProjetM1S2Character;
 
 UCLASS()
@@ -56,7 +57,18 @@ private:
 	UPROPERTY(EditAnywhere, Category = "GreenLightRedLight")
 	FLinearColor RedLightColor = FLinearColor(1.0f, 0.15f, 0.1f);
 
+	UPROPERTY(EditAnywhere, Category = "GreenLightRedLight|Sound")
+	USoundBase* GreenToRedSound = nullptr;
+
+	UPROPERTY(EditAnywhere, Category = "GreenLightRedLight|Sound")
+	USoundBase* RedToGreenSound = nullptr;
+
+	UPROPERTY(EditAnywhere, Category = "GreenLightRedLight|Sound")
+	USoundBase* TeleportSound = nullptr;
+
+	UPROPERTY(ReplicatedUsing = OnRep_IsGreenLight)
 	bool bIsGreenLight = true;
+
 	FTimerHandle LightTimerHandle;
 
 	TSet<TWeakObjectPtr<AProjetM1S2Character>> TrackedCharacters;
@@ -65,6 +77,15 @@ private:
 	void SetLightState(bool bGreen);
 	void SwitchLightState();
 	void CacheRedLightStartLocations();
+	void ApplyLightColor();
+
+	UFUNCTION()
+	void OnRep_IsGreenLight();
+
+	UFUNCTION(NetMulticast, Unreliable)
+	void Multicast_PlayTeleportSound(FVector Location);
+
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	UFUNCTION()
 	void HandleOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
