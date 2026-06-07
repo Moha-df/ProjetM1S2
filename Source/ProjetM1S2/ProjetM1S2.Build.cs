@@ -25,10 +25,11 @@ public class ProjetM1S2 : ModuleRules
 			"AdvancedSteamSessions"
 		});
 		
-		PrivateDependencyModuleNames.AddRange(new string[] 
-		{ 
-			"Slate", 
-			"SlateCore"             // Nécessaire dès qu'on touche à UMG côté C++
+		PrivateDependencyModuleNames.AddRange(new string[]
+		{
+			"Slate",
+			"SlateCore",            // Nécessaire dès qu'on touche à UMG côté C++
+			"MoviePlayer"           // Écran de chargement qui survit au changement de map
 		});
 
 		PublicIncludePaths.AddRange(new string[] {
